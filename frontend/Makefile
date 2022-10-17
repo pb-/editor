@@ -1,5 +1,5 @@
 develop:
-	clojure -A:fig:build
+	clojure -M:fig:build
 .PHONY: develop
 
 release:
