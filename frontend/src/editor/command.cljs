@@ -17,7 +17,7 @@
 (defmethod run :push [cmd]
   (go
     (let [encrypted (<! (encrypt (:key cmd) (:text cmd)))
-          response (<! (http/put "http://localhost:4712/SI6kmli1Wp/raw"
+          response (<! (http/put "http://localhost:4712/api/1fsC3mdLhwylhRxz4pfe"
                                  {:query-params {"replaces" (:replaces cmd)}
                                   :body encrypted
                                   :headers {"Content-Type" "application/octet-stream"}}))]
@@ -29,7 +29,7 @@
 
 (defmethod run :pull [cmd]
   (go
-    (let [response (<! (http/get "http://localhost:4712/SI6kmli1Wp/raw"))
+    (let [response (<! (http/get "http://localhost:4712/api/1fsC3mdLhwylhRxz4pfe"))
           body (:body response)]
       {:type :pulled
        :status (:status response)
