@@ -7,7 +7,12 @@
             [editor.command :refer [run]]
             [editor.view :refer [main]]))
 
-(defn app []
+;; for development hot reloading, avoid running multiple main loops
+(def run-id (.now js/Date))
+(defn keep-running? [id]
+  (= id run-id))
+
+(defn app [id]
   (let [loaded-state (cljs.reader/read-string
                        (.getItem js/window.localStorage "state"))
         app-state (atom (update (initial) :storage #(or loaded-state %)))
@@ -15,17 +20,17 @@
         dispatch #(put! event-queue %)]
     (dispatch {:type :initialized})
     (go
-      (while true
+      (while (keep-running? id)
         (let [event (<! event-queue)
               _ (println "handling" event)
               state-and-commands (evolve @app-state event (.now js/Date))
               commands (:commands state-and-commands)
               state (dissoc state-and-commands :commands)]
-          (assert (not (nil? state)))
-          (reset! app-state state)
-          (.setItem js/window.localStorage "state" (pr-str (:storage state)))
-          (dumdom/render [main state dispatch] (js/document.getElementById "app"))
-          (doseq [command commands]
-            (pipe (run command) event-queue false)))))))
+          (when (keep-running? id)
+            (reset! app-state state)
+            (.setItem js/window.localStorage "state" (pr-str (:storage state)))
+            (dumdom/render [main state dispatch] (js/document.getElementById "app"))
+            (doseq [command commands]
+              (pipe (run command) event-queue false))))))))
 
-(app)
+(app run-id)

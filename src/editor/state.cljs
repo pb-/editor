@@ -92,9 +92,3 @@
 (defmethod evolve :initialized [s event ts]
   (assoc s :commands [{:type :dispatch
                        :event {:type :pull-timer-expired}}]))
-
-#_(defmethod evolve :increased [s event ts]
-    (update s :iterations inc))
-
-#_(defmethod evolve :timed-out [s event ts]
-    (assoc s :iterations ts))
