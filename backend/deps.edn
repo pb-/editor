@@ -3,9 +3,12 @@
   ring/ring-core {:mvn/version "1.9.4"}
   ring/ring-jetty-adapter {:mvn/version "1.9.4"}
   ring-cors/ring-cors {:mvn/version "0.1.13"}}
- :paths ["src"]
+ :paths ["src" "resources"]
  :aliases {:nrepl
            {:extra-deps
             {cider/cider-nrepl {:mvn/version "0.26.0"}
              ring/ring-devel {:mvn/version "1.9.4"}}
-            :main-opts ["-m" "nrepl.cmdline" "--middleware" "[cider.nrepl/cider-middleware]"]}}}
+            :main-opts ["-m" "nrepl.cmdline" "--middleware" "[cider.nrepl/cider-middleware]"]}
+           :build
+           {:deps {io.github.clojure/tools.build {:tag "v0.7.5" :sha "34727f7"}}
+            :ns-default build}}}

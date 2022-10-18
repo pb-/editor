@@ -2,8 +2,10 @@
   (:require [clojure.java.io :as io]
             [clojure.string :as string]
             [ring.adapter.jetty :refer [run-jetty]]
-            [ring.middleware.cors :refer [wrap-cors]])
-  (:import [java.security MessageDigest]))
+            [ring.middleware.cors :refer [wrap-cors]]
+            [ring.middleware.resource :refer [wrap-resource]])
+  (:import [java.security MessageDigest])
+  (:gen-class))
 
 (def storage-path (System/getenv "STORAGE_PATH"))
 
@@ -36,7 +38,8 @@
 
 (defn not-found [& request]
   {:status 404
-   :body "Not here"})
+   :body "Not here"
+   :headers {"Content-type" "text/plain"}})
 
 (defn get-document [document-id]
   {:body (load-document document-id) 
@@ -64,10 +67,21 @@
         (not-found))
       (not-found))))
 
-(defn app [request]
+(defn router [request]
   (if (string/starts-with? (:uri request) "/api/")
     (api (update request :uri subs 4))
     (not-found)))
+
+(defn wrap-index [h]
+  (fn [request]
+    (if (= "/" (:uri request))
+      (h (assoc request :uri "/index.html"))
+      (h request))))
+
+(def app (wrap-index (wrap-resource router "public")))
+
+(defn -main []
+  (run-jetty app {:port 8080}))
 
 (comment
   ;; evaluate this to start the development server

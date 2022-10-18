@@ -4,6 +4,9 @@
             [cljs-http.client :as http]
             [editor.crypto :refer [encrypt decrypt md5]]))
 
+(def endpoint
+  (if ^boolean goog.DEBUG "http://localhost:4712" ""))
+
 (defmulti run :type)
 
 (defmethod run :dispatch [cmd]
@@ -17,7 +20,7 @@
 (defmethod run :push [cmd]
   (go
     (let [encrypted (<! (encrypt (:key cmd) (:text cmd)))
-          response (<! (http/put "http://localhost:4712/api/1fsC3mdLhwylhRxz4pfe"
+          response (<! (http/put (str endpoint "/api/1fsC3mdLhwylhRxz4pfe")
                                  {:query-params {"replaces" (:replaces cmd)}
                                   :body encrypted
                                   :headers {"Content-Type" "application/octet-stream"}}))]
@@ -29,7 +32,7 @@
 
 (defmethod run :pull [cmd]
   (go
-    (let [response (<! (http/get "http://localhost:4712/api/1fsC3mdLhwylhRxz4pfe"))
+    (let [response (<! (http/get (str endpoint "/api/1fsC3mdLhwylhRxz4pfe")))
           body (:body response)]
       {:type :pulled
        :status (:status response)

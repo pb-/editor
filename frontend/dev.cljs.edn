@@ -2,4 +2,5 @@
   :css-dirs ["resources/public"]
   :auto-testing true}
 {:main editor.frontend
+ :closure-defines {frontend.core/DEBUG true}
  :output-to "target/public/main.js"}
