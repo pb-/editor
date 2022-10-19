@@ -1,3 +1,13 @@
+body {
+    background-color: whitesmoke;
+    font-family: sans-serif;
+}
+
 textarea.conflict {
     background-color: mistyrose;
+}
+
+#buffer {
+    width: 100%;
+    box-sizing: border-box;
 }

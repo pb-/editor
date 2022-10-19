@@ -7,7 +7,6 @@
              :local-buffer ""
              :remote-buffer ""
              :remote-buffer-sum "d41d8cd98f00b204e9800998ecf8427e"}
-   :status :idle
    :next-scheduled-push 0
    :generation 1})
 

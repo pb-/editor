@@ -26,10 +26,9 @@
 (defcomponent main [state dispatch]
   (if (:valid-credentials? (:storage state))
     [:div
-     [:button {:onclick #(dispatch {:type :push-requested})} "push"]
-     [:button {:onclick #(dispatch {:type :pull-requested})} "pull"]
+     #_[:button {:onclick #(dispatch {:type :push-requested})} "push"]
+     #_[:button {:onclick #(dispatch {:type :pull-requested})} "pull"]
      [:div
-      [:div (name (:status state))]
       (when (:conflict? (:storage state))
         [:div
          [:div "There is a conflict"]
