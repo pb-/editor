@@ -21,8 +21,7 @@
               {:onclick #(dispatch {:type :login-requested})}
               (when-not (and (= (count (:doc-id-value state)) 20)
                              (= (count (:secret-key-value state)) 32))
-                {:disabled :disabled})) "Log in"]
-   [:pre (str state)]])
+                {:disabled :disabled})) "Log in"]])
 
 (defcomponent main [state dispatch]
   (if (:valid-credentials? (:storage state))
@@ -41,6 +40,5 @@
         :class (when (:conflict? (:storage state)) "conflict")
         :key (:generation state)
         :oninput (goog.functions.debounce (partial handle-buffer-changed dispatch) 250)}
-       (:local-buffer (:storage state))]]
-     [:pre (str state)]]
+       (:local-buffer (:storage state))]]]
     [credentials state dispatch]))

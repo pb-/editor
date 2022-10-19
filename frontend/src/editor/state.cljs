@@ -2,8 +2,7 @@
   (:require [clojure.string :as cs]))
 
 (defn initial []
-  {:storage {:key "00000000000000000000000000000000"
-             :valid-credentials? false
+  {:storage {:valid-credentials? false
              :conflict? false
              :local-buffer ""
              :remote-buffer ""
