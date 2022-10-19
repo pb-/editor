@@ -2,6 +2,7 @@
   (:require [clojure.java.io :as io]
             [clojure.string :as string]
             [ring.adapter.jetty :refer [run-jetty]]
+            [ring.middleware.content-type :refer [wrap-content-type]]
             [ring.middleware.cors :refer [wrap-cors]]
             [ring.middleware.resource :refer [wrap-resource]])
   (:import [java.security MessageDigest])
@@ -78,7 +79,7 @@
       (h (assoc request :uri "/index.html"))
       (h request))))
 
-(def app (wrap-index (wrap-resource router "public")))
+(def app (wrap-index (wrap-content-type (wrap-resource router "public"))))
 
 (defn -main []
   (run-jetty app {:port 8080}))
