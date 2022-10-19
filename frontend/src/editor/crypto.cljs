@@ -35,13 +35,15 @@
   (go
     (if (empty? ciphertext)
       ""
-      (let [iv (decodeStringToUint8Array (subs ciphertext 0 16))
-            ciphertext (decodeStringToUint8Array (subs ciphertext 16))
-            plaintext (js/window.crypto.subtle.decrypt
-                        #js {"name" "AES-GCM", "iv" iv}
-                        (<p! (import-key secret-key))
-                        ciphertext)]
-        (.decode text-decoder (<p! plaintext))))))
+      (try
+        (let [iv (decodeStringToUint8Array (subs ciphertext 0 16))
+              ciphertext (decodeStringToUint8Array (subs ciphertext 16))
+              plaintext (js/window.crypto.subtle.decrypt
+                          #js {"name" "AES-GCM", "iv" iv}
+                          (<p! (import-key secret-key))
+                          ciphertext)]
+          (.decode text-decoder (<p! plaintext)))
+        (catch js/Error _ nil)))))
 
 (defn md5 [s]
   (let [h (Md5.)]

@@ -20,7 +20,7 @@
 (defmethod run :push [cmd]
   (go
     (let [encrypted (<! (encrypt (:key cmd) (:text cmd)))
-          response (<! (http/put (str endpoint "/api/1fsC3mdLhwylhRxz4pfe")
+          response (<! (http/put (str endpoint "/api/" (:doc-id cmd))
                                  {:query-params {"replaces" (:replaces cmd)}
                                   :body encrypted
                                   :headers {"Content-Type" "application/octet-stream"}}))]
@@ -32,9 +32,13 @@
 
 (defmethod run :pull [cmd]
   (go
-    (let [response (<! (http/get (str endpoint "/api/1fsC3mdLhwylhRxz4pfe")))
-          body (:body response)]
-      {:type :pulled
-       :status (:status response)
-       :text (<! (decrypt (:key cmd) body))
-       :sum (md5 body)})))
+    (let [response (<! (http/get (str endpoint "/api/" (:doc-id cmd))))
+          body (:body response)
+          decrypted (<! (decrypt (:key cmd) body))]
+      (if (and (#{200} (:status response)) (some? decrypted))
+        {:type :pulled
+         :status (:status response)
+         :text decrypted
+         :sum (md5 body)}
+        {:type :pulled
+         :status 0}))))
