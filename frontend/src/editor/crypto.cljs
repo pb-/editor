@@ -19,6 +19,29 @@
 (defn ^:private random-iv []
   (js/window.crypto.getRandomValues (js/Uint8Array. 12)))
 
+(defn ^:private ->hex [array]
+  (cs/join (map #(subs (.toString (+ % 256) 16) 1) array)))
+
+(defn derive-key [passphrase salt]
+  (go
+    (let [encoded (.encode text-encoder passphrase)
+          kdf-key (<p! (js/window.crypto.subtle.importKey
+                         "raw" encoded "PBKDF2" false
+                         #js ["deriveBits" "deriveKey"]))
+          aes-key (<p! (js/window.crypto.subtle.deriveKey
+                         #js {:name "PBKDF2"
+                              :salt (.encode text-encoder salt)
+                              :iterations 100000
+                              :hash "SHA-256"}
+                         kdf-key
+                         #js {:name "AES-GCM"
+                              :length 256}
+                         true
+                         #js ["encrypt" "decrypt"]))]
+      (->hex
+        (js/Uint8Array.
+          (<p! (js/window.crypto.subtle.exportKey "raw" aes-key)))))))
+
 (defn encrypt [secret-key plaintext]
   (go
     (let [iv (random-iv)
@@ -48,4 +71,4 @@
 (defn md5 [s]
   (let [h (Md5.)]
     (.update h s)
-    (cs/join (map #(subs (.toString (+ % 256) 16) 1) (.digest h)))))
+    (->hex (.digest h))))
