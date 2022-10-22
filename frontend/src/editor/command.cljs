@@ -2,7 +2,7 @@
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [cljs.core.async :refer [chan put! <!]]
             [cljs-http.client :as http]
-            [editor.crypto :refer [encrypt decrypt md5]]))
+            [editor.crypto :refer [encrypt decrypt md5 derive-key]]))
 
 (def endpoint
   (if ^boolean goog.DEBUG "http://localhost:4712" ""))
@@ -42,3 +42,7 @@
          :sum (md5 body)}
         {:type :pulled
          :status 0}))))
+
+(defmethod run :derive-key [cmd]
+  (go {:type :key-derived
+       :key (<! (derive-key (:passphrase cmd) (:doc-id cmd)))}))

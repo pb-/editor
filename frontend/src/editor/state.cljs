@@ -8,12 +8,13 @@
              :remote-buffer ""
              :remote-buffer-sum "d41d8cd98f00b204e9800998ecf8427e"}
    :next-scheduled-push 0
-   :generation 1})
+   :generation 1
+   :debug? ^boolean goog.DEBUG})
 
 (defmulti evolve (fn [_ event _] (:type event)))
 
 (defmethod evolve :login-requested [s event ts]
-  (let [secret-key (:secret-key-value s)
+  (let [secret-key (:secret-key s)
         doc-id (:doc-id-value s)
         storage (:storage s)]
     (assoc s
@@ -100,7 +101,7 @@
 
 (defmethod evolve :pull-timer-expired [s event ts]
   (assoc s :commands [{:type :timer
-                       :delay-ms 10000
+                       :delay-ms (* 15 60 1000)
                        :event {:type :pull-timer-expired}}
                       {:type :dispatch
                        :event {:type :pull-requested}}]))
@@ -110,7 +111,20 @@
                        :event {:type :pull-timer-expired}}]))
 
 (defmethod evolve :doc-id-value-changed [s event ts]
-  (assoc s :doc-id-value (:value event)))
+  (-> s
+      (assoc :doc-id-value (:value event)
+             :commands [{:type :derive-key
+                         :doc-id (:value event)
+                         :passphrase (:passphrase-value s)}])
+      (dissoc :secret-key)))
 
-(defmethod evolve :secret-key-value-changed [s event ts]
-  (assoc s :secret-key-value (:value event)))
+(defmethod evolve :passphrase-value-changed [s event ts]
+  (-> s
+      (assoc :passphrase-value (:value event))
+      (assoc :commands [{:type :derive-key
+                         :doc-id (:doc-id-value s)
+                         :passphrase (:value event)}])
+      (dissoc :secret-key)))
+
+(defmethod evolve :key-derived [s event ts]
+  (assoc s :secret-key (:key event)))
