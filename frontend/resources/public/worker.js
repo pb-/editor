@@ -1,10 +1,11 @@
-const version = 1;
+const version = 2;
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open('editor-store').then((cache) => cache.addAll([
       '/',
       '/index.html',
+      '/diff3.js',
       '/main.js',
       '/main.css',
       '/app.webmanifest',
