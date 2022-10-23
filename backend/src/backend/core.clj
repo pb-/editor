@@ -79,10 +79,14 @@
       (h (assoc request :uri "/index.html"))
       (h request))))
 
-(def app (wrap-index (wrap-content-type (wrap-resource router "public"))))
+(defn wrap-nocache [h]
+  (fn [request]
+    (assoc-in (h request) [:headers "cache-control"] "no-store")))
+
+(def app (wrap-nocache (wrap-index (wrap-content-type (wrap-resource router "public")))))
 
 (defn -main []
-  (run-jetty app {:port 8080}))
+  (run-jetty app {:port 8080 :send-server-version? false}))
 
 (comment
   ;; evaluate this to start the development server
