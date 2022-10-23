@@ -26,24 +26,30 @@
                              (:secret-key state))
                 {:disabled :disabled})) "Log in"]])
 
+(defn status [state]
+  (let [storage (:storage state)]
+    (cond
+      (:conflict? storage) "There is a conflict"
+      (:dirty? storage) "Local changes made"
+      :else "All synced to cloud")))
+
 (defcomponent main [state dispatch]
   [:div
    (if (:valid-credentials? (:storage state))
      [:div
-      #_[:button {:onclick #(dispatch {:type :push-requested})} "push"]
-      #_[:button {:onclick #(dispatch {:type :pull-requested})} "pull"]
-      [:div
+      [:div.menu
+       [:button.changes {:disabled (when (:conflict? (:storage state)) :disabled)
+                         :onclick #(dispatch {:type :pull-requested})} "Check for changes"]
        (when (:conflict? (:storage state))
-         [:div
-          [:div "There is a conflict"]
-          [:button {:onclick #(dispatch {:type :resolved})} "Mark resolved"]])
-       [:textarea#buffer
-        {:rows 20
-         :cols 81
-         :class (when (:conflict? (:storage state)) "conflict")
-         :key (:generation state)
-         :oninput (goog.functions.debounce (partial handle-buffer-changed dispatch) 250)}
-        (:local-buffer (:storage state))]]]
+         [:button {:onclick #(dispatch {:type :resolved})} "Mark resolved"])
+       [:div (status state)]]
+      [:textarea#buffer
+       {:rows 20
+        :cols 81
+        :class (when (:conflict? (:storage state)) "conflict")
+        :key (:generation state)
+        :oninput (goog.functions.debounce (partial handle-buffer-changed dispatch) 250)}
+       (:local-buffer (:storage state))]]
      [credentials state dispatch])
    (when (:debug? state)
      [:code (prn-str state)])])

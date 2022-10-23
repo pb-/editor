@@ -7,6 +7,12 @@ textarea.conflict {
     background-color: mistyrose;
 }
 
+.menu {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1em;
+}
+
 #buffer {
     width: 100%;
     box-sizing: border-box;

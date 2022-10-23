@@ -4,6 +4,7 @@
 (defn initial []
   {:storage {:valid-credentials? false
              :conflict? false
+             :dirty? false
              :local-buffer ""
              :remote-buffer ""
              :remote-buffer-sum "d41d8cd98f00b204e9800998ecf8427e"}
@@ -41,7 +42,8 @@
   (case (:status event)
     200 (-> s
             (assoc-in [:storage :remote-buffer] (:text event))
-            (assoc-in [:storage :remote-buffer-sum] (:sum event)))
+            (assoc-in [:storage :remote-buffer-sum] (:sum event))
+            (assoc-in [:storage :dirty?] false))
     409 (assoc s :commands [{:type :pull
                              :doc-id (:doc-id (:storage s))
                              :key (:key (:storage s))}])
@@ -83,6 +85,7 @@
   (let [push-delay-ms 3000]
     (-> s
         (assoc-in [:storage :local-buffer] (:text event))
+        (assoc-in [:storage :dirty?] true)
         (assoc :next-scheduled-push (+ ts push-delay-ms))
         (assoc :commands [{:type :timer
                            :delay-ms push-delay-ms
