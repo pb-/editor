@@ -40,4 +40,7 @@
                   (println "command" command))
                 (pipe (run command) event-queue false)))))))))
 
+(when-let [service-worker js/window.navigator.serviceWorker]
+  (.register service-worker "worker.js"))
+
 (app run-id)

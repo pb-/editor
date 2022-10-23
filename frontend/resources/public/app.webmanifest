@@ -1,0 +1,15 @@
+{
+  "background_color": "purple",
+  "description": "Editor",
+  "display": "standalone",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ],
+  "name": "Editor",
+  "short_name": "Editor",
+  "start_url": "/index.html"
+}
