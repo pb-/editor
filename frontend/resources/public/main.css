@@ -10,10 +10,19 @@ textarea.conflict {
 .menu {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: 1em;
+    margin: .5em;
+}
+
+.sync-status {
+    width: 24px;
+    height: 24px;
 }
 
 #buffer {
     width: 100%;
+    height: 75vh;
+    padding: .5em;
     box-sizing: border-box;
 }

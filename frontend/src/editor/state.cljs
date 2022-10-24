@@ -14,17 +14,33 @@
 
 (defmulti evolve (fn [_ event _] (:type event)))
 
+(defn pull [s]
+  (let [storage (:storage s)]
+    (assoc s
+           :pulling? true
+           :commands [{:type :pull
+                       :key (:key storage)
+                       :doc-id (:doc-id storage)}])))
+
+(defn push [s]
+  (let [storage (:storage s)]
+    (assoc s
+           :pushing? true
+           :commands [{:type :push
+                       :key (:key storage)
+                       :doc-id (:doc-id storage)
+                       :text (:local-buffer storage)
+                       :replaces (:remote-buffer-sum storage)}])))
+
 (defmethod evolve :login-requested [s event ts]
   (let [secret-key (:secret-key s)
         doc-id (:doc-id-value s)
         storage (:storage s)]
-    (assoc s
-           :storage (assoc storage
-                           :key secret-key
-                           :doc-id doc-id)
-           :commands [{:type :pull
-                       :key secret-key
-                       :doc-id doc-id}])))
+    (pull
+      (assoc s
+             :storage (assoc storage
+                             :key secret-key
+                             :doc-id doc-id)))))
 
 (defmethod evolve :push-requested [s event ts]
   (let [storage (:storage s)]
@@ -32,30 +48,24 @@
             (= (:local-buffer storage) (:remote-buffer storage))
             (and (:scheduled? event) (< ts (:next-scheduled-push s))))
       s
-      (assoc s :commands [{:type :push
-                           :key (:key storage)
-                           :doc-id (:doc-id storage)
-                           :text (:local-buffer storage)
-                           :replaces (:remote-buffer-sum storage)}]))))
+      (push s))))
 
 (defmethod evolve :pushed [s event ts]
-  (case (:status event)
-    200 (-> s
-            (assoc-in [:storage :remote-buffer] (:text event))
-            (assoc-in [:storage :remote-buffer-sum] (:sum event))
-            (assoc-in [:storage :dirty?] false))
-    409 (assoc s :commands [{:type :pull
-                             :doc-id (:doc-id (:storage s))
-                             :key (:key (:storage s))}])
-    s))
+  (assoc
+    (case (:status event)
+      200 (-> s
+              (assoc-in [:storage :remote-buffer] (:text event))
+              (assoc-in [:storage :remote-buffer-sum] (:sum event))
+              (assoc-in [:storage :dirty?] false))
+      409 (pull s)
+      s)
+    :pushing? false))
 
 (defmethod evolve :pull-requested [s event ts]
   (let [storage (:storage s)]
     (if (or (:conflict? storage) (not (:valid-credentials? storage)))
       s
-      (assoc s :commands [{:type :pull
-                           :key (:key storage)
-                           :doc-id (:doc-id storage)}]))))
+      (pull s))))
 
 (defn ^:private diff3 [a orig b]
   (let [merged (js->clj (.merge js/Diff3 a orig b (clj->js {:stringSeparator "\n"})))]
@@ -63,21 +73,23 @@
      :result (cs/join \newline (merged "result"))}))
 
 (defmethod evolve :pulled [s event ts]
-  (let [storage (:storage s)]
-    (if (and (not (:conflict? storage)) (#{200} (:status event)))
-      (let [merged (diff3 (:local-buffer storage) (:remote-buffer storage) (:text event))
-            generation ((if (= (:local-buffer storage)
-                               (:result merged))
-                          identity inc) (:generation s))]
-        (assoc s
-               :generation generation
-               :storage (assoc storage
-                               :valid-credentials? true
-                               :conflict? (:conflict? merged)
-                               :remote-buffer (:text event)
-                               :remote-buffer-sum (:sum event)
-                               :local-buffer (:result merged))))
-      s)))
+  (assoc
+    (let [storage (:storage s)]
+      (if (and (not (:conflict? storage)) (#{200} (:status event)))
+        (let [merged (diff3 (:local-buffer storage) (:remote-buffer storage) (:text event))
+              generation ((if (= (:local-buffer storage)
+                                 (:result merged))
+                            identity inc) (:generation s))]
+          (assoc s
+                 :generation generation
+                 :storage (assoc storage
+                                 :valid-credentials? true
+                                 :conflict? (:conflict? merged)
+                                 :remote-buffer (:text event)
+                                 :remote-buffer-sum (:sum event)
+                                 :local-buffer (:result merged))))
+        s))
+    :pulling? false))
 
 (defmethod evolve :buffer-changed [s event ts]
   ;; TODO fix a bug where we just turned into a conflict, but pending debounced buffer
@@ -93,14 +105,7 @@
                                    :scheduled? true}}]))))
 
 (defmethod evolve :resolved [s event ts]
-  (let [storage (:storage s)]
-    (-> s
-        (assoc-in [:storage :conflict?] false)
-        (assoc :commands [{:type :push
-                           :key (:key storage)
-                           :doc-id (:doc-id storage)
-                           :text (:local-buffer storage)
-                           :replaces (:remote-buffer-sum storage)}]))))
+  (push (assoc-in s [:storage :conflict?] false)))
 
 (defmethod evolve :pull-timer-expired [s event ts]
   (assoc s :commands [{:type :timer

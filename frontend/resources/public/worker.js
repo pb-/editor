@@ -1,4 +1,4 @@
-const version = 3;
+const version = 4;
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
@@ -9,6 +9,9 @@ self.addEventListener('install', (e) => {
       '/main.js',
       '/main.css',
       '/app.webmanifest',
+      '/cloud.svg',
+      '/download-cloud.svg',
+      '/upload-cloud.svg',
     ])),
   );
 });

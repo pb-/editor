@@ -33,11 +33,20 @@
       (:dirty? storage) "Local changes made"
       :else "All synced to cloud")))
 
+(defcomponent sync-status [state]
+  [:div.sync-status
+   {:style (cond
+             (:pushing? state) {:background-image "url(upload-cloud.svg)"}
+             (:pulling? state) {:background-image "url(download-cloud.svg)"}
+             :else {:background-image "url(cloud.svg)"
+                    :opacity 0.25})}])
+
 (defcomponent main [state dispatch]
   [:div
    (if (:valid-credentials? (:storage state))
      [:div
       [:div.menu
+       [sync-status state]
        [:button.changes {:disabled (when (:conflict? (:storage state)) :disabled)
                          :onclick #(dispatch {:type :pull-requested})} "Check for changes"]
        (when (:conflict? (:storage state))
