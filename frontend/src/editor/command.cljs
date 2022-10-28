@@ -21,7 +21,8 @@
   (go
     (let [encrypted (<! (encrypt (:key cmd) (:text cmd)))
           response (<! (http/put (str endpoint "/api/" (:doc-id cmd))
-                                 {:query-params {"replaces" (:replaces cmd)}
+                                 {:timeout 5000
+                                  :query-params {"replaces" (:replaces cmd)}
                                   :body encrypted
                                   :headers {"Content-Type" "application/octet-stream"}}))]
       (merge {:type :pushed
@@ -32,7 +33,8 @@
 
 (defmethod run :pull [cmd]
   (go
-    (let [response (<! (http/get (str endpoint "/api/" (:doc-id cmd))))
+    (let [response (<! (http/get (str endpoint "/api/" (:doc-id cmd))
+                                 {:timeout 5000}))
           body (:body response)
           decrypted (<! (decrypt (:key cmd) body))]
       (if (and (#{200} (:status response)) (some? decrypted))
