@@ -82,6 +82,7 @@
                             identity inc) (:generation s))]
           (assoc s
                  :generation generation
+                 :debounce-cookie 0
                  :storage (assoc storage
                                  :valid-credentials? true
                                  :conflict? (:conflict? merged)
@@ -92,17 +93,20 @@
     :pulling? false))
 
 (defmethod evolve :buffer-changed [s event ts]
-  ;; TODO fix a bug where we just turned into a conflict, but pending debounced buffer
-  ;; overwrites the conflict markup
-  (let [push-delay-ms 3000]
-    (-> s
-        (assoc-in [:storage :local-buffer] (:text event))
-        (assoc-in [:storage :dirty?] true)
-        (assoc :next-scheduled-push (+ ts push-delay-ms))
-        (assoc :commands [{:type :timer
-                           :delay-ms push-delay-ms
-                           :event {:type :push-requested
-                                   :scheduled? true}}]))))
+  (if (= (:cookie event) (:debounce-cookie s))
+    (let [push-delay-ms 3000]
+      (-> s
+          (assoc-in [:storage :local-buffer] (:text event))
+          (assoc-in [:storage :dirty?] true)
+          (assoc :next-scheduled-push (+ ts push-delay-ms))
+          (assoc :commands [{:type :timer
+                             :delay-ms push-delay-ms
+                             :event {:type :push-requested
+                                     :scheduled? true}}])))
+    s))
+
+(defmethod evolve :debounce-started [s event ts]
+  (assoc s :debounce-cookie (:cookie event)))
 
 (defmethod evolve :resolved [s event ts]
   (push (assoc-in s [:storage :conflict?] false)))

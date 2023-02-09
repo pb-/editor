@@ -2,8 +2,14 @@
   (:require [dumdom.core :as dumdom :refer [defcomponent]]))
 
 (defn handle-buffer-changed [dispatch e]
-  (dispatch {:type :buffer-changed
-             :text (. e -target.value)}))
+  (let [cookie (.now js/Date)]
+    (dispatch {:type :debounce-started
+               :cookie cookie})
+    (.setTimeout js/window
+                 #(dispatch {:type :buffer-changed
+                             :cookie cookie
+                             :text (. e -target.value)})
+                 250)))
 
 (defcomponent credentials [state dispatch]
   [:div.credentials
@@ -57,7 +63,7 @@
         :cols 81
         :class (when (:conflict? (:storage state)) "conflict")
         :key (:generation state)
-        :oninput (goog.functions.debounce (partial handle-buffer-changed dispatch) 250)}
+        :oninput (partial handle-buffer-changed dispatch)}
        (:local-buffer (:storage state))]]
      [credentials state dispatch])
    (when (:debug? state)
