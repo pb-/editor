@@ -67,10 +67,35 @@
       s
       (pull s))))
 
+(defn ^:private str->lines [s]
+  (let [workaround? (cs/ends-with? s "\n")
+        input (if workaround? (str s \x) s)
+        output (cs/split input #"\n")]
+    (if workaround?
+      (conj (pop output) "")
+      output)))
+
+(defn ^:private merge->str [merge-info]
+  (cs/join
+    \newline
+    (flatten
+      (for [part merge-info]
+        (or (part "ok")
+            ["<<<<<<<"
+             (get-in part ["conflict" "a"])
+             "======="
+             (get-in part ["conflict" "b"])
+             ">>>>>>>"])))))
+
+(defn ^:private conflict? [merge-info]
+  (boolean (some #(contains? % "conflict") merge-info)))
+
 (defn ^:private diff3 [a orig b]
-  (let [merged (js->clj (.merge js/Diff3 a orig b (clj->js {:stringSeparator "\n"})))]
-    {:conflict? (merged "conflict")
-     :result (cs/join \newline (merged "result"))}))
+  (let [merged (js->clj (js/diff3 (clj->js (str->lines a))
+                                  (clj->js (str->lines orig))
+                                  (clj->js (str->lines b))))]
+    {:conflict? (conflict? merged)
+     :result (merge->str merged)}))
 
 (defmethod evolve :pulled [s event ts]
   (assoc
