@@ -7,6 +7,7 @@ COPY frontend/deps.edn /build
 RUN clojure -P
 COPY frontend /build
 RUN sed -i "s/development/${version}/g" /build/resources/public/app-version.js
+RUN sed -i "s/development/${version}/g" /build/resources/public/worker.js
 RUN make release
 
 
