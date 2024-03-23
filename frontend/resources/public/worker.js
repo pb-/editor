@@ -12,6 +12,7 @@ self.addEventListener('install', (e) => {
       '/cloud.svg',
       '/download-cloud.svg',
       '/upload-cloud.svg',
+      '/app-version.js',
     ])),
   );
 });

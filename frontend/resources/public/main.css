@@ -26,3 +26,7 @@ textarea.conflict {
     padding: .5em;
     box-sizing: border-box;
 }
+
+.version {
+    color: lightgray;
+}

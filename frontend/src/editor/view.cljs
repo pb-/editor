@@ -66,5 +66,6 @@
         :oninput (partial handle-buffer-changed dispatch)}
        (:local-buffer (:storage state))]]
      [credentials state dispatch])
+   [:p.version "Running " js/appVersion]
    (when (:debug? state)
      [:code (prn-str state)])])

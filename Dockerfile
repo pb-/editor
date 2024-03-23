@@ -1,10 +1,12 @@
 FROM clojure:tools-deps-1.11.1.1165 AS frontend-builder
 
+ARG version=UNKNOWN
 RUN mkdir /build
 WORKDIR /build
 COPY frontend/deps.edn /build
 RUN clojure -P
 COPY frontend /build
+RUN sed -i "s/development/${version}/g" /build/resources/public/app-version.js
 RUN make release
 
 
