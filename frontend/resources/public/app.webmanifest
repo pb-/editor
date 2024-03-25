@@ -1,7 +1,7 @@
 {
   "background_color": "purple",
   "description": "Editor",
-  "display": "standalone",
+  "display": "browser",
   "icons": [
     {
       "src": "icon.png",
